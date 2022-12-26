@@ -1,0 +1,21 @@
+services:
+  http-gateway:
+    build: ./http-gateway
+    container_name: http-gateway
+    ports:
+      - "8000:80"
+    depends_on:
+      - hello-service
+  hello-service:
+    build: ./hello-service
+    container_name: hello-service
+  rabbitmq-stomp:
+    build: ./rabbitmq
+    container_name: rabbitmq-stomp
+  ws-gateway:
+    build: ./ws-gateway
+    container_name: ws-gateway
+    depends_on:
+      - rabbitmq-stomp
+    environment:
+      STOMP_SERVER_URL: ws://rabbitmq-stomp:15674/ws

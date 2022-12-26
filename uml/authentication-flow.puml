@@ -1,0 +1,13 @@
+@startuml
+actor User as U
+rectangle "HTTP Gateway" as Gate
+rectangle UMS
+rectangle "Some Service"
+database "UMS DB" as umsdb
+
+UMS -- umsdb
+
+U --> Gate: send login request
+Gate --> UMS: proxies login request
+
+@enduml

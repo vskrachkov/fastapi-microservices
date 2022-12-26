@@ -1,0 +1,54 @@
+@startuml
+skinparam monochrome true
+
+actor User
+participant "Items Service" as ITM
+participant "Orders Service" as ORM
+participant "Payments Service" as PMT
+participant "Payments Gateway" as PG
+
+User -> ITM: get items list
+
+activate ITM
+ITM -> ITM: retrieve items from db
+ITM --> User: returns items list
+deactivate ITM
+
+activate User
+User -> User: choose an item with <ItemID>
+User -> ORM: order an item with <ItemID>
+deactivate User
+
+activate ORM
+ORM -> ITM: check <ItemID> exists
+ORM -> ORM: create unpaid order with <OrderID> for <ItemID>
+ORM -> PMT: create payment with order_id=<OrderID>
+deactivate ORM
+
+activate PMT
+PMT -> PMT: create unprocessed payment for <OrderID>
+PMT -> PG: init payment session
+PG --> PMT: returns <CheckoutPageURL>
+PMT --> ORM: returns <CheckoutPageURL>
+deactivate PMT
+
+activate ORM
+ORM -> User: redirect User to <CheckoutPageURL>
+deactivate ORM
+
+activate User
+User -> PG: pay
+deactivate User
+
+PG -> PMT: send payment result
+
+activate PMT
+PMT -> ORM: send payment result
+deactivate PMT
+
+activate ORM
+ORM -> ORM: save payment result
+deactivate ORM
+
+
+@enduml

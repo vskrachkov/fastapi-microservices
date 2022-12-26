@@ -1,0 +1,15 @@
+services:
+  http-gateway:
+    command: ["uvicorn", "http_gateway.main:application", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info", "--reload"]
+    volumes:
+      - './http-gateway:/code'
+  rabbitmq-stomp:
+    ports:
+      - 15674:15674
+      - 15672:15672
+  ws-gateway:
+    ports:
+      - 8888:80
+    command: ["uvicorn", "ws_gateway.main:application", "--host", "0.0.0.0", "--port", "80", "--log-level", "info", "--reload"]
+    volumes:
+      - './ws-gateway:/code'

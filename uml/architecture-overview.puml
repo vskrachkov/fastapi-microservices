@@ -1,0 +1,57 @@
+@startuml
+
+rectangle Internet {
+    actor User
+
+    rectangle Gateways #white/red {
+        rectangle "HTTP Gateway" as HTTP_G
+        rectangle "WebSockets Gateway" as WS_G
+    }
+}
+
+rectangle "Internal Network" {
+    rectangle Users #white/orange {
+        rectangle "User Management Service" as UMS
+        database "Users DB" as UMS_DB
+    }
+
+    rectangle Items #white/green {
+        rectangle "Items Service" as ItmS
+        database "Items DB" as ItmS_DB
+    }
+
+    rectangle Orders #white/blue {
+        rectangle "Orders Service" as OrS
+        database "Orders DB" as OrS_DB
+    }
+
+    rectangle Payments #white/yellow {
+        rectangle "Payments Service" as PmtS
+        database "Payments DB" as PmtS_DB
+    }
+
+    queue "RabbitMQ" as Q
+}
+
+User --> HTTP_G
+User <--> WS_G
+
+HTTP_G --> UMS
+UMS -- UMS_DB
+
+WS_G <--> Q
+WS_G --> UMS
+
+HTTP_G --> OrS
+OrS -- OrS_DB
+OrS --> Q
+
+HTTP_G --> ItmS
+ItmS -- ItmS_DB
+ItmS --> Q
+
+HTTP_G --> PmtS
+PmtS -- PmtS_DB
+PmtS --> Q
+
+@enduml

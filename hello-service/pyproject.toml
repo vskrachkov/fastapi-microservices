@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "hello-service"
+version = "0.1.0"
+description = ""
+authors = ["Vyacheslav Krachkov <v.krachkov@enestech.net>"]
+readme = "README.md"
+packages = [{include = "hello_service"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.88.0"
+uvicorn = "^0.20.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

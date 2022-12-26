@@ -1,0 +1,25 @@
+@startuml
+hide empty description
+state new as "New"
+state in_progress as "In Progress"
+state ready as "Ready"
+state delivered as "Delivered"
+state canceled as "Canceled"
+
+[*] --> new
+
+new --> canceled
+
+in_progress --> canceled
+
+new --> in_progress
+
+in_progress --> ready
+
+ready --> delivered
+
+ready --> canceled
+
+canceled --> [*]
+delivered --> [*]
+@enduml

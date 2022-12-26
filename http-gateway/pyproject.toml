@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "http-gateway"
+version = "0.1.0"
+description = ""
+authors = ["Vyacheslav Krachkov <v.krachkov@enestech.net>"]
+readme = "README.md"
+packages = [{include = "http_gateway"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+uvicorn = "^0.20.0"
+fastapi = "^0.88.0"
+httpx = "^0.23.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
