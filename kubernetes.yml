@@ -1,0 +1,238 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-gateway
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: http-gateway
+  template:
+    metadata:
+      labels:
+        name: http-gateway
+    spec:
+      containers:
+      - name: http-gateway
+        image: http-gateway:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu   : "0.02"
+            memory: "30Mi"
+          limits:
+            cpu   : "0.9"
+            memory: "400Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-service
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: hello-service
+  template:
+    metadata:
+      labels:
+        name: hello-service
+    spec:
+      containers:
+      - name: hello-service
+        image: hello-service:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu   : "0.02"
+            memory: "30Mi"
+          limits:
+            cpu   : "0.9"
+            memory: "400Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ws-gateway
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: ws-gateway
+  template:
+    metadata:
+      labels:
+        name: ws-gateway
+    spec:
+      containers:
+      - name: ws-gateway
+        image: ws-gateway:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu   : "0.02"
+            memory: "30Mi"
+          limits:
+            cpu   : "0.9"
+            memory: "400Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-stomp
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: rabbitmq-stomp
+  template:
+    metadata:
+      labels:
+        name: rabbitmq-stomp
+    spec:
+      containers:
+      - name: rabbitmq-stomp
+        image: rabbitmq-stomp:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu   : "0.02"
+            memory: "30Mi"
+          limits:
+            cpu   : "0.9"
+            memory: "400Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: http-gateway
+  labels:
+    name: http-gateway
+spec:
+  ports:
+  - name: web
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+   name: http-gateway
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-service
+  labels:
+    name: hello-service
+spec:
+  ports:
+  - name: web
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+   name: hello-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ws-gateway
+  labels:
+    name: ws-gateway
+spec:
+  ports:
+  - name: web
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+   name: ws-gateway
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-stomp
+  labels:
+    name: rabbitmq-stomp
+spec:
+  ports:
+  - name: management
+    port: 15672
+    protocol: TCP
+    targetPort: 15672
+  - name: rabbit_web_stomp
+    port: 15674
+    protocol: TCP
+    targetPort: 15674
+  selector:
+   name: rabbitmq-stomp
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: http-gateway
+  annotations:
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: PUT, GET, POST, OPTIONS, PATCH
+    nginx.ingress.kubernetes.io/cors-allow-origin: '*'
+    cert-manager.io/cluster-issuer: "letsencrypt"
+spec:
+  rules:
+  - host: http-gateway.fm.gq
+    http:
+      paths:
+      - backend:
+          service:
+            name: http-gateway
+            port:
+              number: 80
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - http-gateway.fm.gq
+    secretName: http-gateway-https
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ws-gateway
+  annotations:
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: PUT, GET, POST, OPTIONS, PATCH
+    nginx.ingress.kubernetes.io/cors-allow-origin: '*'
+    cert-manager.io/cluster-issuer: "letsencrypt"
+spec:
+  rules:
+  - host: ws-gateway.fm.gq
+    http:
+      paths:
+      - backend:
+          service:
+            name: ws-gateway
+            port:
+              number: 80
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - ws-gateway.fm.gq
+    secretName: ws-gateway-https
+
