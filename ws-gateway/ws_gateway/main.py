@@ -23,7 +23,7 @@ async def reverse(ws: WebSocket, stomp_ws: websockets.WebSocketClientProtocol):
         await ws.send_text(data)
 
 
-@application.websocket("/")
+@application.websocket("/ws")
 async def websocket(ws: WebSocket):
     await ws.accept()
     stomp_ws: websockets.WebSocketClientProtocol

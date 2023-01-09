@@ -2,6 +2,7 @@
 
 rectangle Internet {
     actor User
+    rectangle "Chat APP" as Chat
 
     rectangle Gateways #white/red {
         rectangle "HTTP Gateway" as HTTP_G
@@ -33,8 +34,10 @@ rectangle "Internal Network" {
     queue "RabbitMQ" as Q
 }
 
-User --> HTTP_G
-User <--> WS_G
+User --> Chat
+
+Chat <--> WS_G
+Chat <--> HTTP_G
 
 HTTP_G --> UMS
 UMS -- UMS_DB

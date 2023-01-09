@@ -1,0 +1,148 @@
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@5.0.0/bundles/stomp.umd.js"></script>
+
+<div id="chat">
+    <div id="chat-messages">
+
+        <form id="chat-form" method="post">
+            <input id="message-text" type="text" name="message" placeholder="Enter a message..." maxlength="500"
+                   autocomplete="off">
+            <button type="submit">Send</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #222831;
+        font-family: monospace;
+        font-weight: 300;
+        font-size: 10pt;
+        color: #dfdbdb;
+        line-height: 1.60em;
+        overflow-x: hidden;
+    }
+
+    div#chat-messages {
+        width: 100%;
+        height: 80vh;
+        margin-bottom: 50px;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    form#chat-form input,
+    form#chat-form button {
+        border: 1px solid #dfdbdb;
+        background: none;
+        font-family: monospace;
+        font-weight: 300;
+        font-size: 18pt;
+        color: white;
+        padding: 8px 15px;
+    }
+
+    form#chat-form input {
+        width: 40vw;
+    }
+
+    form#chat-form button {
+        cursor: pointer;
+    }
+
+    div.message.green {
+        color: #95d592;
+    }
+
+    div.message.red {
+        color: #d59292;
+    }
+
+    div.message.blue {
+        color: #9592d5;
+    }
+</style>
+
+<script>
+    const sender_username = window.prompt("What is your username?");
+    MessageAdd('<div class="message blue">' + 'Your username: ' + sender_username + '</div>');
+
+    const receiver_username = window.prompt("With whom you want to chat (username)?");
+
+
+    const client = new StompJs.Client({
+        brokerURL: 'ws://localhost:8888/ws',
+        debug: function (str) {
+            console.log(str);
+        },
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+    });
+
+    client.onConnect = function (frame) {
+        MessageAdd('<div class="message green">' + 'You have entered the chat room with ' + receiver_username + '</div>');
+
+        const subscription = client.subscribe('/topic/chat.' + sender_username, function (frame) {
+            // called when the client receives a STOMP message from the server
+            if (frame.body) {
+                MessageAdd('<div class="message">Received: ' + frame.body + '</div>');
+            } else {
+                console.log('got empty message');
+            }
+        });
+    };
+
+    client.onStompError = function (frame) {
+        // Will be invoked in case of error encountered at Broker
+        // Bad login/passcode typically will cause an error
+        // Complaint brokers will set `message` header with a brief message. Body may contain details.
+        // Compliant brokers will terminate the connection after any error
+        console.log('Broker reported error: ' + frame.headers['message']);
+        console.log('Additional details: ' + frame.body);
+        MessageAdd('<div class="message red">Connection to chat failed</div>');
+    };
+
+    client.onDisconnect = function (frame) {
+        MessageAdd('<div class="message blue">You have been disconnected.</div>');
+    };
+
+    client.activate()
+
+    // on chat form submit:
+    document.getElementById("chat-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const message_element = document.getElementById("message-text");
+        const message = message_element.value;
+
+        if (message.toString().length) {
+            const data = {
+                type: "message",
+                username: "You",
+                message: message
+            };
+
+            const body = JSON.stringify(data)
+
+            client.publish({
+                destination: '/topic/chat.' + receiver_username,
+                body: body,
+                headers: {priority: '9'},
+            });
+
+            MessageAdd('<div class="message">Sent: ' + body + '</div>');
+
+            message_element.value = "";
+        }
+    }, false);
+
+
+    // add message to chat:
+    function MessageAdd(message) {
+        const chat_messages = document.getElementById("chat-messages");
+
+        chat_messages.insertAdjacentHTML("beforeend", message);
+        chat_messages.scrollTop = chat_messages.scrollHeight;
+    }
+</script>
