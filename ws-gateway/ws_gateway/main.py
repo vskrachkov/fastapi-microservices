@@ -11,29 +11,29 @@ application = FastAPI()
 STOMP_URL = os.environ.get("STOMP_SERVER_URL")
 
 
-async def forward(ws: WebSocket, stomp_ws: websockets.WebSocketClientProtocol):
-    while True:
-        data = await ws.receive_text()
-        await stomp_ws.send(data)
-
-
-async def reverse(ws: WebSocket, stomp_ws: websockets.WebSocketClientProtocol):
-    while True:
-        data = await stomp_ws.recv()
-        await ws.send_text(data)
-
-
 @application.websocket("/ws")
-async def websocket(ws: WebSocket):
-    await ws.accept()
-    stomp_ws: websockets.WebSocketClientProtocol
+async def websocket(client: WebSocket):
+    await client.accept()
+    broker_ws: websockets.WebSocketClientProtocol
     async with websockets.connect(
         STOMP_URL,
         subprotocols=[Subprotocol("v10.stomp"), Subprotocol("v11.stomp")],
-    ) as stomp_ws:
-        rev_task = asyncio.create_task(reverse(ws, stomp_ws))
-        fwd_task = asyncio.create_task(forward(ws, stomp_ws))
+    ) as broker_ws:
+        rev_task = asyncio.create_task(reverse(client, broker_ws))
+        fwd_task = asyncio.create_task(forward(client, broker_ws))
         await asyncio.gather(fwd_task, rev_task)
+
+
+async def forward(client: WebSocket, broker: websockets.WebSocketClientProtocol):
+    while True:
+        data = await client.receive_text()
+        await broker.send(data)
+
+
+async def reverse(client: WebSocket, broker: websockets.WebSocketClientProtocol):
+    while True:
+        data = await broker.recv()
+        await client.send_text(data)
 
 
 if __name__ == "__main__":
