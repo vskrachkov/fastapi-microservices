@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: http-gateway
-        image: http-gateway:latest
+        image: vskrachkov/fastapi-microservices-http-gateway:latest
         imagePullPolicy: Always
         resources:
           requests:
@@ -50,7 +50,7 @@ spec:
     spec:
       containers:
       - name: hello-service
-        image: hello-service:latest
+        image: vskrachkov/fastapi-microservices-hello-service:latest
         imagePullPolicy: Always
         resources:
           requests:
@@ -81,7 +81,7 @@ spec:
     spec:
       containers:
       - name: ws-gateway
-        image: ws-gateway:latest
+        image: vskrachkov/fastapi-microservices-ws-gateway:latest
         imagePullPolicy: Always
         resources:
           requests:
@@ -112,7 +112,7 @@ spec:
     spec:
       containers:
       - name: rabbitmq-stomp
-        image: rabbitmq-stomp:latest
+        image: vskrachkov/fastapi-microservices-rabbitmq-stomp:latest
         imagePullPolicy: Always
         resources:
           requests:
@@ -133,7 +133,7 @@ spec:
   - name: web
     port: 80
     protocol: TCP
-    targetPort: 80
+    targetPort: 8000
   selector:
    name: http-gateway
 ---
@@ -179,7 +179,7 @@ spec:
     port: 15672
     protocol: TCP
     targetPort: 15672
-  - name: rabbit_web_stomp
+  - name: rabbit-web-stomp
     port: 15674
     protocol: TCP
     targetPort: 15674
@@ -197,7 +197,7 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt"
 spec:
   rules:
-  - host: http-gateway.fm.gq
+  - host: http-gateway.io
     http:
       paths:
       - backend:
@@ -205,34 +205,16 @@ spec:
             name: http-gateway
             port:
               number: 80
+        path: /
         pathType: ImplementationSpecific
-  tls:
-  - hosts:
-    - http-gateway.fm.gq
-    secretName: http-gateway-https
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ws-gateway
-  annotations:
-    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
-    nginx.ingress.kubernetes.io/cors-allow-methods: PUT, GET, POST, OPTIONS, PATCH
-    nginx.ingress.kubernetes.io/cors-allow-origin: '*'
-    cert-manager.io/cluster-issuer: "letsencrypt"
-spec:
-  rules:
-  - host: ws-gateway.fm.gq
-    http:
-      paths:
       - backend:
           service:
             name: ws-gateway
             port:
               number: 80
+        path: /ws
         pathType: ImplementationSpecific
   tls:
   - hosts:
-    - ws-gateway.fm.gq
-    secretName: ws-gateway-https
-
+    - http-gateway.io
+    secretName: http-gateway-https
